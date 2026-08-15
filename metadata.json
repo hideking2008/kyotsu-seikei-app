@@ -1,0 +1,6 @@
+{
+  "name": "公共政経 一問一答マスター",
+  "description": "新課程「公共」および「政治・経済」を完全網羅した共通テスト対策アプリ。公共分野（青年期・倫理思想・現代社会の諸課題）から政治・経済・国際社会まで、全580問の一問一答・過去問演習・体系マスター教科書を収録。",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

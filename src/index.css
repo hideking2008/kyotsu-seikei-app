@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+@layer base {
+  html, body {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    overscroll-behavior-y: contain;
+    background-color: #FAF8F5;
+    color: #1C1917;
+    font-feature-settings: "palt" 1;
+  }
+}
+
+/* Custom sleek transitions and utilities */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+::selection {
+  background-color: #FED7AA;
+  color: #7C2D12;
+}
