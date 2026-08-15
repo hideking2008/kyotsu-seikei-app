@@ -33,8 +33,6 @@ interface HomeViewProps {
   onOpenCategorySelect: () => void;
   onOpenList: () => void;
   onOpenExamSelect: () => void;
-  onOpenTextbook: () => void;
-  onOpenMaterialPractice: () => void;
   onResetData: () => void;
 }
 
@@ -45,8 +43,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
   onOpenCategorySelect,
   onOpenList,
   onOpenExamSelect,
-  onOpenTextbook,
-  onOpenMaterialPractice,
   onResetData,
 }) => {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -162,16 +158,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
             <div className="font-bold text-amber-900 text-xs sm:text-sm mt-0.5 whitespace-nowrap">全{TEXTBOOK_CHAPTERS.length}章収録</div>
           </div>
         </div>
-
-        <button
-          id="btn-goto-textbook-reader"
-          onClick={onOpenTextbook}
-          className="w-full bg-gradient-to-r from-[#eb4867] via-[#e23758] to-[#d82a4d] hover:from-[#e23758] hover:to-[#c92344] active:scale-[0.99] text-white font-bold py-3.5 px-4 rounded-xl shadow-md shadow-rose-500/20 transition-all flex items-center justify-center gap-2 text-xs group"
-        >
-          <BookOpen className="w-4 h-4 text-rose-100" />
-          <span>長文を読んで体系的にインプットする</span>
-          <ChevronRight className="w-4 h-4 text-rose-100 group-hover:translate-x-0.5 transition-transform" />
-        </button>
       </div>
 
       {/* 2. 一問一答 演習（ヒーロー＆学習サマリーカード） */}
@@ -238,56 +224,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
         </button>
       </div>
 
-      {/* 3. 資料問題 演習モード（新機能・図表・グラフ・古典抜粋特訓） */}
-      <div className="bg-gradient-to-br from-[#2D241E] via-[#382D24] to-[#251E19] text-white rounded-2xl p-5 sm:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.15)] border border-amber-500/40 space-y-4 relative overflow-hidden">
-        {/* 背景装飾 */}
-        <div className="absolute -right-6 -bottom-6 w-36 h-36 bg-amber-500/15 rounded-full blur-2xl pointer-events-none" />
-
-        <div className="flex items-start justify-between relative">
-          <div>
-            <div className="text-[10px] font-bold tracking-wider text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded-md inline-flex items-center gap-1 mb-1 border border-amber-400/30">
-              <FileText className="w-3 h-3 text-amber-300" />
-              <span>新機能 ・ 過去問資料データベース</span>
-            </div>
-            <h3 className="text-xl font-bold text-white tracking-tight">
-              資料問題 演習モード
-            </h3>
-            <p className="text-xs text-stone-300 mt-0.5">
-              グラフ・古典抜粋・比較図・年代整序など頻出の図表問題を即座に特訓
-            </p>
-          </div>
-          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white shadow-md shadow-amber-500/30">
-            <BarChart3 className="w-5 h-5 text-white" />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-3 gap-2 text-center text-xs pt-1 border-t border-white/10">
-          <div className="bg-white/5 border border-white/10 p-2.5 rounded-xl">
-            <div className="text-[10px] text-stone-400 font-medium">総収録</div>
-            <div className="font-bold text-amber-300 font-mono text-sm mt-0.5">{DB_STATS.total}問</div>
-          </div>
-          <div className="bg-white/5 border border-white/10 p-2.5 rounded-xl">
-            <div className="text-[10px] text-stone-400 font-medium">資料付き</div>
-            <div className="font-bold text-amber-400 font-mono text-sm mt-0.5">{DB_STATS.withMaterialCount}問</div>
-          </div>
-          <div className="bg-white/5 border border-white/10 p-2.5 rounded-xl">
-            <div className="text-[10px] text-stone-400 font-medium">分野</div>
-            <div className="font-bold text-white font-mono text-sm mt-0.5">政・経・国</div>
-          </div>
-        </div>
-
-        <button
-          id="btn-goto-material-practice"
-          onClick={onOpenMaterialPractice}
-          className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 active:scale-[0.99] text-white font-bold py-3.5 px-4 rounded-xl shadow-md shadow-amber-500/30 transition-all flex items-center justify-center gap-2 text-xs group"
-        >
-          <FileText className="w-4 h-4 text-amber-100" />
-          <span>資料問題を解く（演習スタート）</span>
-          <ChevronRight className="w-4 h-4 text-amber-100 group-hover:translate-x-0.5 transition-transform" />
-        </button>
-      </div>
-
-      {/* 4. 共通テスト過去問演習（年度・本追試験）バナー */}
+      {/* 3. 共通テスト過去問演習（年度・本追試験）バナー */}
       <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-[0_2px_16px_rgba(217,119,6,0.06)] border border-amber-200/80 space-y-4 relative overflow-hidden">
         {/* 上品なゴールドの装飾アクセント */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-amber-100/60 to-transparent pointer-events-none rounded-bl-full" />
@@ -637,10 +574,8 @@ export const HomeView: React.FC<HomeViewProps> = ({
       <AppGuideModal
         isOpen={isGuideOpen}
         onClose={() => setIsGuideOpen(false)}
-        onNavigateToTextbook={onOpenTextbook}
         onNavigateToQuiz={() => onStartQuiz('normal')}
         onNavigateToExam={onOpenExamSelect}
-        onNavigateToMaterialPractice={onOpenMaterialPractice}
       />
     </div>
   );

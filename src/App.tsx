@@ -7,18 +7,10 @@ import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { QUESTIONS_DATA, QUESTION_CATEGORIES } from './data/questions';
 import { ALL_EXAMS } from './data/exams';
-import { ALL_DB_QUESTIONS } from './data/allDbQuestions';
-import { RawQuestionData } from './data/types';
 import { Question, QuizMode, QuizSessionResult, UserProgressState, ExamData, ExamResultSummary, ExamField } from './types';
 import { loadUserProgress, saveUserProgress, clearUserProgress } from './utils/storage';
 import { saveExamResult } from './utils/examStorage';
 import { gradeExam } from './utils/examScorer';
-import {
-  MaterialProgressState,
-  loadMaterialProgress,
-  saveMaterialProgress,
-  clearMaterialProgress,
-} from './utils/materialStorage';
 import { Header } from './components/Header';
 import { HomeView } from './components/HomeView';
 import { QuizCard } from './components/QuizCard';
@@ -28,17 +20,6 @@ import { CategorySelectView } from './components/CategorySelectView';
 import { ExamSelectView } from './components/ExamSelectView';
 import { ExamPracticeView } from './components/ExamPracticeView';
 import { ExamResultView } from './components/ExamResultView';
-import { TextbookReaderView } from './components/TextbookReaderView';
-import {
-  MaterialSelectView,
-  MaterialCategoryFilter,
-  MaterialQuizMode,
-} from './components/MaterialSelectView';
-import { MaterialPracticeView } from './components/MaterialPracticeView';
-import {
-  MaterialResultView,
-  MaterialSessionResult,
-} from './components/MaterialResultView';
 import { AlertCircle } from 'lucide-react';
 
 type ViewMode =
@@ -49,11 +30,7 @@ type ViewMode =
   | 'category_select'
   | 'exam_select'
   | 'exam_practice'
-  | 'exam_result'
-  | 'textbook'
-  | 'material_select'
-  | 'material_practice'
-  | 'material_result';
+  | 'exam_result';
 
 export default function App() {
   const [view, setView] = useState<ViewMode>('home');
@@ -77,31 +54,6 @@ export default function App() {
   const [selectedExam, setSelectedExam] = useState<ExamData | null>(null);
   const [examUserAnswers, setExamUserAnswers] = useState<Record<string, number | string>>({});
   const [examResult, setExamResult] = useState<ExamResultSummary | null>(null);
-
-  // 資料問題演習時のステート
-  const [materialProgress, setMaterialProgress] = useState<MaterialProgressState>(() =>
-    loadMaterialProgress()
-  );
-  const [materialQueue, setMaterialQueue] = useState<RawQuestionData[]>([]);
-  const [materialIndex, setMaterialIndex] = useState<number>(0);
-  const [materialAnswers, setMaterialAnswers] = useState<
-    { question: RawQuestionData; isCorrect: boolean }[]
-  >([]);
-  const [materialSessionResult, setMaterialSessionResult] = useState<MaterialSessionResult | null>(
-    null
-  );
-
-  // 資料問題進捗の更新
-  const updateMaterialProgressState = useCallback(
-    (updater: (prev: MaterialProgressState) => MaterialProgressState) => {
-      setMaterialProgress((prev) => {
-        const next = updater(prev);
-        saveMaterialProgress(next);
-        return next;
-      });
-    },
-    []
-  );
 
   // 状態変更時に保存
   const updateUserState = useCallback((updater: (prev: UserProgressState) => UserProgressState) => {
@@ -422,169 +374,11 @@ export default function App() {
     }
   }, []);
 
-  // 資料問題演習の開始
-  const handleStartMaterialPractice = useCallback(
-    (category: MaterialCategoryFilter, mode: MaterialQuizMode) => {
-      let filtered = ALL_DB_QUESTIONS;
-      if (category !== 'all') {
-        filtered = filtered.filter((q) => q.category === category);
-      }
-
-      let queue: RawQuestionData[] = [];
-      switch (mode) {
-        case 'materials_only':
-          queue = shuffleArray(filtered.filter((q) => q.has_material));
-          break;
-        case 'random10':
-          queue = shuffleArray(filtered).slice(0, 10);
-          break;
-        case 'incorrect':
-          queue = shuffleArray(
-            filtered.filter((q) => {
-              const rec = materialProgress.records[q.id];
-              return rec && rec.lastStatus === false;
-            })
-          );
-          break;
-        case 'bookmarked':
-          queue = shuffleArray(
-            filtered.filter((q) => materialProgress.bookmarks.includes(q.id))
-          );
-          break;
-        case 'all':
-        default:
-          queue = [...filtered];
-          break;
-      }
-
-      if (queue.length === 0) return;
-
-      setMaterialQueue(queue);
-      setMaterialIndex(0);
-      setMaterialAnswers([]);
-      setMaterialSessionResult(null);
-      setView('material_practice');
-      window.scrollTo(0, 0);
-    },
-    [materialProgress]
-  );
-
-  // 資料問題の解答
-  const handleMaterialAnswer = useCallback(
-    (isCorrect: boolean) => {
-      const currentQ = materialQueue[materialIndex];
-      if (!currentQ) return;
-
-      // 記録更新
-      updateMaterialProgressState((prev) => {
-        const prevRec = prev.records[currentQ.id] || {
-          correctCount: 0,
-          incorrectCount: 0,
-          lastStatus: false,
-          lastAnsweredAt: 0,
-        };
-
-        const nextRec = {
-          correctCount: isCorrect ? prevRec.correctCount + 1 : prevRec.correctCount,
-          incorrectCount: !isCorrect ? prevRec.incorrectCount + 1 : prevRec.incorrectCount,
-          lastStatus: isCorrect,
-          lastAnsweredAt: Date.now(),
-        };
-
-        return {
-          ...prev,
-          records: {
-            ...prev.records,
-            [currentQ.id]: nextRec,
-          },
-        };
-      });
-
-      // 今回のセッション結果配列に追加
-      setMaterialAnswers((prev) => {
-        const filtered = prev.filter((item) => item.question.id !== currentQ.id);
-        return [...filtered, { question: currentQ, isCorrect }];
-      });
-    },
-    [materialQueue, materialIndex, updateMaterialProgressState]
-  );
-
-  // 資料問題の次へ遷移
-  const handleMaterialNextQuestion = useCallback(() => {
-    if (materialIndex + 1 < materialQueue.length) {
-      setMaterialIndex((prev) => prev + 1);
-      window.scrollTo(0, 0);
-    } else {
-      // 演習終了：リザルト画面へ
-      const correctCount = materialAnswers.filter((a) => a.isCorrect).length;
-      const incorrectCount = materialAnswers.filter((a) => !a.isCorrect).length;
-      const incorrectQuestions = materialAnswers
-        .filter((a) => !a.isCorrect)
-        .map((a) => a.question);
-
-      setMaterialSessionResult({
-        total: materialQueue.length,
-        correct: correctCount,
-        incorrect: incorrectCount,
-        incorrectQuestions,
-        answeredQuestions: materialAnswers,
-      });
-      setView('material_result');
-      window.scrollTo(0, 0);
-    }
-  }, [materialIndex, materialQueue, materialAnswers]);
-
-  // 資料問題のブックマーク切り替え
-  const handleToggleMaterialBookmark = useCallback(() => {
-    const currentQ = materialQueue[materialIndex];
-    if (!currentQ) return;
-
-    updateMaterialProgressState((prev) => {
-      const exists = prev.bookmarks.includes(currentQ.id);
-      const nextBookmarks = exists
-        ? prev.bookmarks.filter((bId) => bId !== currentQ.id)
-        : [...prev.bookmarks, currentQ.id];
-      return {
-        ...prev,
-        bookmarks: nextBookmarks,
-      };
-    });
-  }, [materialQueue, materialIndex, updateMaterialProgressState]);
-
-  // 資料問題の再演習（全問）
-  const handleRetryMaterialAll = useCallback(() => {
-    if (materialQueue.length === 0) return;
-    setMaterialIndex(0);
-    setMaterialAnswers([]);
-    setMaterialSessionResult(null);
-    setView('material_practice');
-    window.scrollTo(0, 0);
-  }, [materialQueue]);
-
-  // 資料問題の再演習（ミス問題のみ）
-  const handleRetryMaterialIncorrect = useCallback(() => {
-    if (!materialSessionResult || materialSessionResult.incorrectQuestions.length === 0) return;
-
-    setMaterialQueue(materialSessionResult.incorrectQuestions);
-    setMaterialIndex(0);
-    setMaterialAnswers([]);
-    setMaterialSessionResult(null);
-    setView('material_practice');
-    window.scrollTo(0, 0);
-  }, [materialSessionResult]);
-
-  // 資料問題進捗のリセット
-  const handleResetMaterialProgress = useCallback(() => {
-    const fresh = clearMaterialProgress();
-    setMaterialProgress(fresh);
-  }, []);
-
   // データ初期化
   const handleResetData = useCallback(() => {
     clearUserProgress();
     setUserState({ records: {}, bookmarks: [] });
-    handleResetMaterialProgress();
-  }, [handleResetMaterialProgress]);
+  }, []);
 
   // 中断・戻る処理
   const handleGoHome = useCallback(() => {
@@ -626,14 +420,12 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#F8F9FA] text-neutral-900 flex flex-col justify-between selection:bg-neutral-200 relative">
       {/* 共通ヘッダー（演習中は専用上部バーを使用） */}
-      {view !== 'exam_practice' && view !== 'material_practice' && (
+      {view !== 'exam_practice' && (
         <Header
           view={
             view === 'exam_select' ||
             view === 'exam_result' ||
-            view === 'category_select' ||
-            view === 'material_select' ||
-            view === 'material_result'
+            view === 'category_select'
               ? 'home'
               : (view as any)
           }
@@ -669,68 +461,7 @@ export default function App() {
               setView('exam_select');
               window.scrollTo(0, 0);
             }}
-            onOpenTextbook={() => {
-              setView('textbook');
-              window.scrollTo(0, 0);
-            }}
-            onOpenMaterialPractice={() => {
-              setView('material_select');
-              window.scrollTo(0, 0);
-            }}
             onResetData={handleResetData}
-          />
-        )}
-
-        {view === 'material_select' && (
-          <MaterialSelectView
-            progress={materialProgress}
-            onStartMaterialQuiz={handleStartMaterialPractice}
-            onBack={() => {
-              setView('home');
-              window.scrollTo(0, 0);
-            }}
-            onResetProgress={handleResetMaterialProgress}
-          />
-        )}
-
-        {view === 'material_practice' && materialQueue[materialIndex] && (
-          <MaterialPracticeView
-            queue={materialQueue}
-            currentIndex={materialIndex}
-            isBookmarked={materialProgress.bookmarks.includes(materialQueue[materialIndex].id)}
-            onAnswer={handleMaterialAnswer}
-            onNextQuestion={handleMaterialNextQuestion}
-            onToggleBookmark={handleToggleMaterialBookmark}
-            onQuit={() => {
-              setView('material_select');
-              window.scrollTo(0, 0);
-            }}
-          />
-        )}
-
-        {view === 'material_result' && materialSessionResult && (
-          <MaterialResultView
-            result={materialSessionResult}
-            onRetryAll={handleRetryMaterialAll}
-            onRetryIncorrect={handleRetryMaterialIncorrect}
-            onBackToSelect={() => {
-              setView('material_select');
-              window.scrollTo(0, 0);
-            }}
-            onGoHome={() => {
-              setView('home');
-              window.scrollTo(0, 0);
-            }}
-          />
-        )}
-
-        {view === 'textbook' && (
-          <TextbookReaderView
-            onClose={() => {
-              setView('home');
-              window.scrollTo(0, 0);
-            }}
-            onStartQuizByRange={handleStartQuizByRange}
           />
         )}
 

@@ -22,10 +22,8 @@ import {
 interface AppGuideModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onNavigateToTextbook: () => void;
   onNavigateToQuiz: () => void;
   onNavigateToExam: () => void;
-  onNavigateToMaterialPractice?: () => void;
 }
 
 interface SlideItem {
@@ -47,10 +45,8 @@ interface SlideItem {
 export const AppGuideModal: React.FC<AppGuideModalProps> = ({
   isOpen,
   onClose,
-  onNavigateToTextbook,
   onNavigateToQuiz,
   onNavigateToExam,
-  onNavigateToMaterialPractice,
 }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
 
@@ -75,31 +71,8 @@ export const AppGuideModal: React.FC<AppGuideModalProps> = ({
       previewType: 'overview',
     },
     {
-      id: 'textbook',
-      badge: 'FEATURE 01',
-      badgeColor: 'bg-rose-100 text-rose-900 border-rose-300',
-      title: '体系マスター教科書（赤シート講義）',
-      subtitle: '単なる用語の丸暗記から「歴史的背景・因果関係の理解」へ',
-      description:
-        '全19章にわたる教科書レベルの解説長文を収録。重要キーワード（全500語）が赤字で隠れる「赤シートモード」をワンタップで切り替え、読解しながら即アウトプットできます。',
-      featurePoints: [
-        { label: '赤シートON/OFF', detail: 'タップで暗記用赤文字を隠し、タップで答え合わせ' },
-        { label: '全19章・完全体系化', detail: '民主政治の基本から最新のデジタル社会・国際紛争まで網羅' },
-        { label: '目次ジャンプ', detail: '苦手な分野やテスト直前の確認箇所へ一瞬で移動' },
-      ],
-      targetAudience: '用語のつながりや因果関係が頭に入っていない方・教科書代わりに通読したい方',
-      previewType: 'textbook',
-      actionButton: {
-        label: '体系マスター教科書を開く',
-        action: () => {
-          onClose();
-          onNavigateToTextbook();
-        },
-      },
-    },
-    {
       id: 'quiz',
-      badge: 'FEATURE 02',
+      badge: 'FEATURE 01',
       badgeColor: 'bg-amber-100 text-amber-900 border-amber-300',
       title: '一問一答 スピード演習',
       subtitle: '厳選500問を頻出度ランク別＆多様なモードで高速周回',
@@ -121,31 +94,8 @@ export const AppGuideModal: React.FC<AppGuideModalProps> = ({
       },
     },
     {
-      id: 'material',
-      badge: 'FEATURE 03',
-      badgeColor: 'bg-emerald-100 text-emerald-900 border-emerald-300',
-      title: '資料問題 演習モード（図表・グラフ・古典抜粋）',
-      subtitle: '共テ最大の差がつく「資料読み取り問題」を分野別に集中特訓',
-      description:
-        '市場の需要供給曲線、GDP三面等価、日銀オペ、古典思想家の原典抜粋、地方自治年表、国連・国際条約の比較表など、視覚資料・提示文を用いた実践問題を集中攻略できます。',
-      featurePoints: [
-        { label: '図表・資料ビューア', detail: '鮮明なSVGグラフや比較テーブルをズーム機能付きで閲覧' },
-        { label: '分野別＆資料付き特訓', detail: '「政治」「経済」「国際」の各分野から資料問題のみを抽出' },
-        { label: '根拠がわかる詳細解説', detail: '出題の狙い・グラフの読み方・背景知識まで丁寧に解説' },
-      ],
-      targetAudience: '資料問題やグラフ問題で失点しやすい方・実戦問題の演習量を増やしたい方',
-      previewType: 'material',
-      actionButton: onNavigateToMaterialPractice ? {
-        label: '資料問題演習を始める',
-        action: () => {
-          onClose();
-          onNavigateToMaterialPractice();
-        },
-      } : undefined,
-    },
-    {
       id: 'exam',
-      badge: 'FEATURE 04',
+      badge: 'FEATURE 02',
       badgeColor: 'bg-blue-100 text-blue-900 border-blue-300',
       title: '共通テスト 過去問実戦演習',
       subtitle: '2025・2026年度（全5回分・計160問）を完全収録',
